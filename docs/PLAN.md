@@ -233,10 +233,82 @@ including every-tile routes in the L-shape and planted bugs that proved the corn
 
 ---
 
+## v2: Adult things (planned 2026-10-08, yes given the same day)
+
+The room gets furniture, the avatar gets things to do with it, and a daily checklist turns those into
+"adulting": sleep, cook, pay the bills.
+
+**What v2 adds under the hood:** tiles that are floor but *not walkable* (furniture stands on them), the
+avatar's first *states* beyond walking (doing a thing, then done), and the first *saved data* (today's
+checklist, kept in the browser).
+
+### v2 decisions (all taken as recommended with "start the v2 block 1", 2026-10-08)
+
+| # | Decision | Recommendation |
+| - | -------- | -------------- |
+| V2-D1 | Where furniture is written down | In the room text itself, with letters: `B` bed, `D` desk, `K` kitchenette (`#` free floor, `.` no floor), so the text still looks like the room from above. A piece faces away from the wall it stands against; a bed in a corner has its head on the back wall |
+| V2-D2 | What furniture is made of | Shapes drawn in code (rounded boxes in palette colours), like Pastel Bean: no downloads, sizes the tests can check. Alternative: Kenney's CC0 Furniture Kit (nicer, but a download and Kenney's colours) |
+| V2-D3 | How the avatar does things | Poses made in code, like the walk (D6): lying down, stirring at the counter, sitting and typing |
+| V2-D4 | How you start a thing | Tap the piece of furniture: the avatar walks to the tile in front of it, turns to face it, does it for about 4 s, then stands back up. Tapping the floor mid-way stops and walks there |
+| V2-D5 | The three adult things | Sleep (bed), cook (kitchenette), pay the bills (desk) |
+| V2-D6 | Today's checklist | Saved in the browser, resets at local midnight, broken saved data is ignored. Each item is also a button that sends the avatar to do it, so it works with a keyboard too |
+
+### Block 1: A furnished room
+- Every room shape gets a single bed (1 × 2 m), a desk with a chair (1.5 m) and a kitchenette counter
+  (1.5 m, with a hob and a pot), placed against the tall back and left walls so they stay in view.
+  Example, the square room:
+  ```
+  BB###KKK      bed in the back-left corner, kitchenette on the back wall
+  BB######
+  BB######
+  BB######
+  D#######      desk on the left wall
+  D#######
+  D#######
+  ########
+  ```
+- Furniture tiles are floor (the walls don't change) but not walkable: routes go around furniture.
+- Each piece has a **use spot**, the free tile where the avatar stands to use it: beside the middle of
+  the bed (you get in from the side), and in front of the middle of the counter and of the desk. The
+  desk chair stays tucked under the desk, so walking past never goes through it; it slides out when
+  the avatar sits down (Block 2).
+
+**Tests:** every piece sits fully on floor tiles and against a wall; pieces don't overlap; every use
+spot is a free tile reachable from the start tile; the free floor is still one connected piece (no
+piece cuts a room in two); routes never cross a furniture tile; the start tile is free. v1's walking
+tests switch from "every floor tile" to "every free tile".
+
+### Block 2: Doing a thing
+- Tap a piece of furniture: the avatar walks to its use spot, turns to face it and does its thing for
+  about 4 s:
+  - **Sleep:** lies down on the bed, eyes closed, a few "z" letters float up, and the room dims as if
+    it were night, then gets up again.
+  - **Cook:** stands at the counter stirring the pot, steam rising.
+  - **Pay the bills:** sits on the chair and types on the laptop.
+- Tapping the floor while it's busy stops the thing and walks there; tapping another piece goes and
+  does that instead. The whole sequence is one small state machine: standing, walking to a thing,
+  doing it, getting up.
+
+**Tests:** tapping a piece plans a route to its use spot; the avatar only starts once it's there and
+facing the piece; each thing lasts its set time and ends standing on the use spot; a floor tap
+cancels it; the poses are within human limits (knees bend forward only, sitting puts the thighs
+level); the room's night dim returns to day exactly when sleep ends.
+
+### Block 3: Today's adult things
+- A small **Today** card lists the three adult things with a tick for each one done today, and a
+  count ("2 of 3"). When all three are ticked it says so ("Adulting: done for today").
+- Ticks are **saved in the browser** for the day, survive a reload and clear at local midnight.
+  Broken or old saved data is ignored safely instead of crashing the app.
+- Each item is a button too: press it and the avatar goes and does that thing (keyboard friendly).
+
+**Tests:** finishing a thing ticks it (cancelling doesn't); the count and the all-done message; a
+reload keeps today's ticks; a new day clears them; corrupt, old-version or future-dated saved data is
+ignored; the items match the furniture's things one to one.
+
+---
+
 ## Later versions (sketches, re-planned when they start)
 
-- **v2: Adult things.** Furniture (bed, desk, kitchenette) and the first three things to do: each one
-  a short avatar action in the room.
 - **v3: Make it yours.** Recolour hair, eyes and outfit, switch between a few avatars, pick room colours.
 
 ## Backlog
