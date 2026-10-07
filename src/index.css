@@ -1,0 +1,88 @@
+/* Colours come from src/theme/palette.ts: main.tsx sets --paper, --ink, --grape, ... on :root */
+:root {
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  overflow: hidden; /* older browsers */
+  overflow: clip; /* "hidden" still lets the browser scroll the page itself; "clip" doesn't */
+}
+
+.app {
+  position: relative;
+  overflow: clip;
+  width: 100%;
+  /* dvh = the visible height on phones, ignoring the browser's address bar */
+  height: 100vh;
+  height: 100dvh;
+  /* The 3D canvas is transparent, so this backdrop shows behind the room.
+     Paper at the top (where the wordmark sits), soft lilac at the bottom. */
+  background: linear-gradient(180deg, var(--paper) 30%, var(--lilac));
+}
+
+.app canvas {
+  touch-action: none; /* drags turn the camera instead of scrolling the page */
+}
+
+.hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: max(16px, env(safe-area-inset-top)) 16px 0 max(16px, env(safe-area-inset-left));
+  pointer-events: none; /* clicks pass through to the room */
+}
+
+.wordmark {
+  margin: 0;
+  font-family: 'Bricolage Grotesque Variable', system-ui, sans-serif;
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-weight: 450;
+}
+
+.wordmark-part {
+  display: inline-block;
+}
+
+/* "thing" and "z" carry the weight */
+.wordmark-strong {
+  font-weight: 800;
+}
+
+/* The z tips over a little, like it's leaning on the wall */
+.wordmark-part[data-part='z'] {
+  transform: rotate(-10deg) translateY(-0.04em);
+  margin-left: 0.02em;
+}
+
+.hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+/* Show the hint that matches the device: mouse on desktop, finger on a phone */
+.hint-touch {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .hint-desktop {
+    display: none;
+  }
+  .hint-touch {
+    display: block;
+  }
+}
