@@ -133,16 +133,52 @@ builds each one's floor, walls and corner posts, with the camera-side walls cut 
 The camera re-fits to each room but keeps your angle, and the picker works by mouse, touch and keyboard.
 39 tests pass, including two that caught real or planted bugs in the camera fit and the wall joining.
 
-### Block 2: The avatar arrives
+### Block 2: The avatar arrives ✅
 - Add `@pixiv/three-vrm`. Load the avatar (`public/avatars/*.vrm`: a CC0 VRoid sample, AvatarSample
   D–G, decision D2; keep its licence note next to the file) and stand it in the room, facing the
   camera, at real-world scale next to the 2.6 m walls.
 - Idle life: arms relaxed down (VRoid exports in a T-pose), gentle breathing, a blink every few seconds.
 - A small "loading avatar…" note, and a clear message if the file fails to load.
 
-**Tests:** blink timing (closes and opens within ~0.15 s, waits 2–6 s between blinks); the spawn
-tile is a floor tile in every room shape; the avatar file stays under the phone size budget
-(set when we see the real file, aim ≤ 15 MB).
+**As built:**
+- **The avatar:** β Ver AvatarSample_1 (Sendagaya Shibu), VRoid Project / pixiv, CC0, confirmed on
+  VRoid's official page. VRoid Hub needs a pixiv sign-in, so it came from the CC0 re-upload on
+  OpenGameArt (`avatarsample_d.zip`); its own licence fields were checked before use. Notes in
+  `public/avatars/LICENSE.md`.
+- **Size:** the file was 16.1 MB. `scripts/strip-vrm-thumbnail.mjs` removed the 2.5 MB thumbnail
+  picture (only avatar-picker apps use it), giving 13.6 MB. The script refuses any file where it
+  can't do that safely.
+- **Loading:** `src/avatar/avatarStore.ts` loads the file once and reports progress in 5 % steps,
+  then "Getting avatar ready…" while it unpacks, an error with **Try again** if it fails, and
+  nothing once it's ready. three-vrm is split into its own 184 kB file that only downloads when
+  needed, so the room shows first.
+- **Placement:** the avatar stands on the floor tile nearest the middle of the floor
+  (`src/avatar/placement.ts`), turned to face where the camera starts. Switching rooms moves it to
+  the new room's middle.
+- **Idle life** (`src/avatar/idle.ts`, used by `AvatarModel.tsx`): arms 69° down with a slight
+  forward elbow bend, a 4 s breath (spine and chest tip under 2°), and blinks lasting 0.15 s, 2–6 s
+  apart from a seeded random source. Checked in the browser: hands 0.40 m below the shoulders and
+  6 cm forward, one full blink in 8 s, chest moving ±0.02 rad.
+
+**Tests** (`src/avatar/avatar.test.ts`, 12 runs)
+- B2-T1: a blink closes and opens within 0.15 s, steadily, never jumping back.
+- B2-T2: blinks come 2–6 s apart over two minutes, eyes open in between, same seed = same blinks.
+- B2-T3: breathing repeats every 4 s and tips the body under 2°.
+- B2-T4: the arms come down symmetrically, and VRM 0 and VRM 1 avatars are handled the same way.
+- B2-T5: in every room the avatar starts on a floor tile, in the middle (tie → towards the camera).
+- B2-T6: the file is a VRM, under 15 MB, thumbnail removed.
+- B2-T7: the file's own licence allows anyone to use, change and share it, commercially too.
+- B2-T8: the avatar is human-sized (head 1.1–1.8 m, well under the walls), feet on the floor.
+- B2-T9: the loading note counts in 5 % steps, says when it's unpacking, and says clearly when it failed.
+
+Planted bugs caught: the original 16 MB file (B2-T6) and a missing tie-break (B2-T5). Also found in
+the browser: an empty note meant both "not started" and "ready", so the note now carries
+`data-state`.
+
+**Summary (done 2026-10-07):** A CC0 anime avatar now stands in the middle of whichever room you pick,
+facing you, with relaxed arms, slow breathing and natural blinks. The file was trimmed from 16.1 to
+13.6 MB, its licence was checked inside the file itself, and the page shows loading progress, a clear
+error and a Try again button. 51 tests pass, and planted bugs proved the size and placement tests bite.
 
 ### Block 3: Tap to walk
 - Tap a floor tile: a small ring marks the spot and the avatar walks there on the shortest path
@@ -166,3 +202,6 @@ length on simple rooms; a tile you can't reach gives no path; the tap-vs-drag ru
 - Remember the chosen room shape after a reload.
 - More shapes: T, U, or draw your own on the tile grid.
 - Dark mode.
+- Let the camera zoom closer to the avatar (today it stops about 3.7 m away).
+- The avatar's eyes follow the camera (three-vrm `lookAt`).
+- Shrink the avatar further for phones: smaller textures (needs a tool that keeps VRM data intact).

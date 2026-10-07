@@ -6,9 +6,12 @@
 
 ## Status
 
-**v1 Block 1 (room shapes) done:** pick a square, rectangle or L-shaped room; walls build themselves
-from a tile grid, with the camera-side walls cut low so you can look in. Next: your avatar arrives
-(Block 2), then tap to walk (Block 3).
+**v1 Blocks 1–2 done:** pick a square, rectangle or L-shaped room (walls build themselves from a tile
+grid, camera-side walls cut low so you can look in), and an anime avatar stands in the middle,
+breathing and blinking. Next: tap to walk (Block 3).
+
+The avatar is β Ver AvatarSample_1 by the VRoid Project (pixiv), CC0; see
+[public/avatars/LICENSE.md](public/avatars/LICENSE.md).
 The full build guide is in [docs/PLAN.md](docs/PLAN.md).
 
 ## Run it

@@ -97,12 +97,55 @@ body,
   white-space: nowrap;
 }
 
-/* Room shape picker: a pill at the bottom, where a thumb reaches on a phone */
-.room-picker {
+/* Bottom of the screen, where a thumb reaches on a phone: the avatar note above the picker */
+.bottom-bar {
   position: absolute;
   left: 50%;
   bottom: max(16px, env(safe-area-inset-bottom));
   transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  white-space: nowrap;
+}
+
+/* Nothing to say (the avatar is in the room): take no space */
+.avatar-status:empty {
+  display: none;
+}
+
+.avatar-status button {
+  font: inherit;
+  font-weight: 650;
+  min-height: 32px;
+  padding: 2px 12px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--bubblegum);
+  cursor: pointer;
+}
+
+.avatar-status button:focus-visible {
+  outline: 2px solid var(--bubblegum);
+  outline-offset: 2px;
+}
+
+/* Room shape picker: a pill of three options */
+.room-picker {
   display: flex;
   gap: 4px;
   margin: 0;

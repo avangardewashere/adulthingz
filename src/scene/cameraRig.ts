@@ -57,7 +57,8 @@ export const DISTANCE = {
 const clampDistance = (d: number) => Math.min(DISTANCE.max, Math.max(DISTANCE.min, d))
 
 // Starting view: from the front-right corner, looking down at the floor
-const START = { polar: 0.95, azimuth: Math.PI / 4 }
+export const START_AZIMUTH = Math.PI / 4
+const START = { polar: 0.95, azimuth: START_AZIMUTH }
 
 // Camera position for a screen shape and room size, as {x, y, z}
 export function startPosition(aspect: number, radius = STAGE_RADIUS): Vec3 {

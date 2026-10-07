@@ -3,6 +3,7 @@ import { Wordmark } from './brand/Wordmark'
 import { RoomScene } from './scene/RoomScene'
 import { RoomPicker } from './room/RoomPicker'
 import type { RoomShapeId } from './room/roomShapes'
+import { AvatarStatus } from './avatar/AvatarStatus'
 
 export default function App() {
   // Which room is showing. Kept in memory only: remembering it after a reload is in the backlog.
@@ -16,7 +17,10 @@ export default function App() {
         <p className="hint hint-desktop">Drag to turn · scroll to zoom</p>
         <p className="hint hint-touch">Drag to turn · pinch to zoom</p>
       </header>
-      <RoomPicker value={shapeId} onChange={setShapeId} />
+      <div className="bottom-bar">
+        <AvatarStatus />
+        <RoomPicker value={shapeId} onChange={setShapeId} />
+      </div>
     </main>
   )
 }
