@@ -34,7 +34,7 @@ and a build on every push (`.github/workflows/ci.yml`).
 | D3 | Look: light "paper" backdrop, ink text, grape + bubblegum accents; wordmark font Bricolage Grotesque | ✅ Block 0 (change any colour in `src/theme/palette.ts`) |
 | D4 | View: dollhouse. The camera looks in from the front-right and turns within limits; no first-person walking | ✅ taken with "go ahead with Block 1" |
 | D5 | A room is a set of 0.5 m floor tiles. Walls go wherever a tile has no neighbour, so every shape uses the same code | ✅ taken with "go ahead with Block 1" |
-| D6 | Walk animation: Mixamo clips converted for VRM, pixiv's `.vrma` clips, or a simple walk made in code | 🟡 decide at Block 3 |
+| D6 | Walk animation: a simple walk made in code (no files, fully testable). Mixamo or pixiv `.vrma` clips can replace it later | ✅ chosen 2026-10-07 |
 
 ---
 
@@ -180,14 +180,56 @@ facing you, with relaxed arms, slow breathing and natural blinks. The file was t
 13.6 MB, its licence was checked inside the file itself, and the page shows loading progress, a clear
 error and a Try again button. 51 tests pass, and planted bugs proved the size and placement tests bite.
 
-### Block 3: Tap to walk
+### Block 3: Tap to walk ✅
 - Tap a floor tile: a small ring marks the spot and the avatar walks there on the shortest path
   over floor tiles, going around the L's corner instead of through the wall. It turns to face where
   it's going, and blends from idle to walk and back (decision D6).
 - A drag to turn the camera must not count as a tap (moved less than ~6 px = tap).
 
-**Tests:** the path only uses floor tiles; it never cuts the L's inside corner; it's the shortest
-length on simple rooms; a tile you can't reach gives no path; the tap-vs-drag rule.
+**As built:**
+- **Route** (`src/walk/path.ts`): A* search over tiles, 8 directions, with diagonals allowed only
+  when both side tiles are floor. The tile chain is then straightened wherever the avatar's body (a
+  0.2 m square from its centre, checked every 2 cm) still fits. Open floor gives one straight walk;
+  the L gives a bend around its corner. Taps mid-walk re-plan from where the avatar is.
+- **Walker** (`src/walk/walker.ts`): 1.2 m/s, turns at most 9 rad/s the short way round, and
+  barely moves while facing the wrong way (no moonwalking). Legs blend in and out over 0.2 s.
+- **Walk cycle** (`src/walk/walkCycle.ts`): hips swing ±0.45 rad, knees bend up to 0.75 rad
+  mid-swing, arms swing ±0.35 rad against the legs, a small chest twist and a 2 cm dip. Strides are
+  1.2 m, so 2 steps a second, and the legs cycle in step with the distance covered.
+- **Poses** (`src/avatar/pose.ts`): resting arms, walk and breathing are added bone by bone,
+  written once in VRM 1 terms and flipped for VRM 0 avatars in one place.
+- **Tapping:** the floor reports the tapped tile (`tileAt`), a press that moved 6 px or more is a
+  camera drag, and the cursor turns into a pointer over the floor. A grape ring pulses on the target
+  until arrival.
+- **Checked in the browser:** arrives exactly on the tapped tile centre; a 40 px drag doesn't walk;
+  across the L the avatar stays 0.34 m from the inside corner; a second tap mid-walk wins.
+
+**Tests** (`src/walk/walk.test.ts`, 109 runs)
+- B3-T1: a tap point maps to the tile under it; no floor (outside, the L's cut-out) gives no tile.
+- B3-T2: a path to every floor tile, on floor only, one neighbour per step, no diagonal past a corner:
+  from the start tile in square and rectangle, and from **every** tile in the L-shape.
+- B3-T3: tile steps cost exactly the best possible; across open floor the walk is one straight line.
+- B3-T4: across the L the walk bends, the body always fits, it keeps 0.2 m from the inside corner,
+  and smoothing made it shorter than stepping tile by tile.
+- B3-T4b: in every room, every walk from the start tile keeps the body on the floor.
+- B3-T5: no way there gives no walk; tapping your own tile, or off the floor, gives no walk.
+- B3-T6: the walker covers 1.2 m a second, stops exactly on the end point, reports arrival once,
+  settles to standing in 0.2 s, turns first when facing away, never turns faster than 9 rad/s, and
+  takes the short way round.
+- B3-T7: legs alternate, arms swing against their own leg, knees only bend forward, the stride
+  repeats, the knee bends during the forward swing, 1.6–2.2 steps a second. With no walk blended in,
+  the result is exactly the resting pose.
+- B3-T8: under 6 px is a tap, 6 px or more is a drag.
+
+Planted bugs caught: diagonals cutting corners (B3-T4, and B3-T2 once it checked every tile in the
+L; at first it only started from the middle and missed it), and the body's width ignored (B3-T4).
+
+**Summary (done 2026-10-07):** Tap the floor and the avatar walks there on the shortest route that
+fits its body, curving around the L's corner, turning to face its way, legs and arms swinging in step.
+The whole walk is code, with no animation files, and drags still turn the camera. 160 tests pass,
+including every-tile routes in the L-shape and planted bugs that proved the corner rules bite.
+
+**v1 complete:** pick a room shape, meet your avatar, tap to walk.
 
 ---
 
@@ -205,3 +247,5 @@ length on simple rooms; a tile you can't reach gives no path; the tap-vs-drag ru
 - Let the camera zoom closer to the avatar (today it stops about 3.7 m away).
 - The avatar's eyes follow the camera (three-vrm `lookAt`).
 - Shrink the avatar further for phones: smaller textures (needs a tool that keeps VRM data intact).
+- Walk with the keyboard too (arrow keys), so tapping isn't the only way to move.
+- Swap the code walk for a recorded walk clip (Mixamo or pixiv `.vrma`) with feet that don't slide.

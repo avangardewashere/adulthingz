@@ -1,11 +1,38 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import type { ThreeEvent } from '@react-three/fiber'
 import { PALETTE } from '../theme/palette'
+import { isTap } from '../lib/tap'
 import { FLOOR_MATERIAL, WALL_MATERIAL } from './roomMaterials'
-import { floorBox, floorRects, gridLines, mergeWalls, postBoxes, wallBox, wallEdges, type RoomPlan } from './roomLayout'
+import {
+  floorBox,
+  floorRects,
+  gridLines,
+  mergeWalls,
+  postBoxes,
+  tileAt,
+  wallBox,
+  wallEdges,
+  type RoomPlan,
+  type Tile,
+} from './roomLayout'
+
+const setCursor = (cursor: string) => (document.body.style.cursor = cursor)
 
 // The empty room: floor blocks, walls, corner posts and faint tile lines.
 // All the maths is in roomLayout.ts; this only hands the boxes to three.js.
-export function RoomShell({ plan }: { plan: RoomPlan }) {
+// Tapping the floor reports the tile; a drag (turning the camera) doesn't count.
+export function RoomShell({ plan, onFloorTap }: { plan: RoomPlan; onFloorTap?: (tile: Tile) => void }) {
+  // the pointer cursor must not stick if the room is swapped while hovering it
+  useEffect(() => () => void setCursor(''), [])
+
+  const tapFloor = (event: ThreeEvent<MouseEvent>) => {
+    // event.delta = how many pixels the pointer moved between press and release
+    if (!isTap(event.delta)) return
+    event.stopPropagation()
+    const tile = tileAt(plan, event.point.x, event.point.z)
+    if (tile) onFloorTap?.(tile)
+  }
+
   const parts = useMemo(
     () => ({
       floors: floorRects(plan).map((rect) => floorBox(plan, rect)),
@@ -18,11 +45,13 @@ export function RoomShell({ plan }: { plan: RoomPlan }) {
 
   return (
     <group>
-      {parts.floors.map((box, i) => (
-        <mesh key={`floor-${i}`} position={box.position} material={FLOOR_MATERIAL} receiveShadow>
-          <boxGeometry args={box.size} />
-        </mesh>
-      ))}
+      <group onClick={tapFloor} onPointerOver={() => setCursor('pointer')} onPointerOut={() => setCursor('')}>
+        {parts.floors.map((box, i) => (
+          <mesh key={`floor-${i}`} position={box.position} material={FLOOR_MATERIAL} receiveShadow>
+            <boxGeometry args={box.size} />
+          </mesh>
+        ))}
+      </group>
 
       {parts.walls.map((box, i) => (
         <mesh key={`wall-${i}`} position={box.position} material={WALL_MATERIAL} castShadow receiveShadow>

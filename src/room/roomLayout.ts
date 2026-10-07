@@ -222,6 +222,13 @@ export function tileCentre(plan: RoomPlan, tile: Tile) {
   return { x: lineX(plan, tile.col + 0.5), z: lineZ(plan, tile.row + 0.5) }
 }
 
+// The floor tile under a point, or null if there's no floor there
+export function tileAt(plan: RoomPlan, x: number, z: number): Tile | null {
+  const col = Math.floor((x - lineX(plan, 0)) / TILE)
+  const row = Math.floor((z - lineZ(plan, 0)) / TILE)
+  return isFloor(plan, col, row) ? { col, row } : null
+}
+
 // A wall from just below the floor (it hides the floor slab's edge) up to its height.
 // It stands outside the floor, so the whole floor stays walkable.
 export function wallBox(plan: RoomPlan, segment: WallSegment): Box {

@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { Matrix4, Quaternion, Vector3 } from 'three'
-import { BLINK, BLINK_SECONDS, BREATH_SECONDS, BREATH_SWAY, blinkCurve, breath, createBlinker, restingArms } from './idle'
+import { BLINK, BLINK_SECONDS, BREATH_SECONDS, BREATH_SWAY, blinkCurve, breath, createBlinker, RESTING_POSE } from './idle'
 import { spawnTile } from './placement'
+import { forVersion, turn } from './pose'
 import { percentOf, statusText } from './avatarStore'
 import { AVATAR } from './avatarFile'
 import { ROOM_SHAPES, findShape } from '../room/roomShapes'
@@ -61,15 +62,12 @@ describe('Block 2: the avatar arrives', () => {
     for (const angle of Object.values(BREATH_SWAY)) expect(angle).toBeLessThan((2 * Math.PI) / 180)
   })
 
-  it('B2-T4: arms come down symmetrically, and VRM 0 and VRM 1 avatars end up the same way', () => {
-    const angle = (pose: ReturnType<typeof restingArms>, bone: string) => pose.find(([b]) => b === bone)![2]
-    for (const version of ['0', '1'] as const) {
-      const pose = restingArms(version)
-      expect(angle(pose, 'leftUpperArm')).toBe(-angle(pose, 'rightUpperArm'))
-      expect(angle(pose, 'leftLowerArm')).toBe(-angle(pose, 'rightLowerArm'))
-    }
-    // VRM 0 flips the z-turn of the upper arms (it was built facing the other way)
-    expect(angle(restingArms('0'), 'leftUpperArm')).toBe(-angle(restingArms('1'), 'leftUpperArm'))
+  it('B2-T4: arms come down symmetrically, and VRM 0 avatars get mirrored turns', () => {
+    expect(RESTING_POSE.leftUpperArm!.z).toBe(-RESTING_POSE.rightUpperArm!.z)
+    expect(RESTING_POSE.leftLowerArm!.y).toBe(-RESTING_POSE.rightLowerArm!.y)
+    // VRM 0 was built facing the other way: turns around x and z flip, y stays
+    expect(forVersion({ chest: turn(0.1, 0.2, 0.3) }, '0').chest).toEqual({ x: -0.1, y: 0.2, z: -0.3 })
+    expect(forVersion({ chest: turn(0.1, 0.2, 0.3) }, '1').chest).toEqual({ x: 0.1, y: 0.2, z: 0.3 })
   })
 
   it.each(ROOM_SHAPES)('B2-T5: in the $label room the avatar starts on a floor tile', (shape) => {

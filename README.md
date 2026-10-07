@@ -6,9 +6,10 @@
 
 ## Status
 
-**v1 Blocks 1–2 done:** pick a square, rectangle or L-shaped room (walls build themselves from a tile
-grid, camera-side walls cut low so you can look in), and an anime avatar stands in the middle,
-breathing and blinking. Next: tap to walk (Block 3).
+**v1 complete:** pick a square, rectangle or L-shaped room (walls build themselves from a tile grid,
+camera-side walls cut low so you can look in), meet an anime avatar that breathes and blinks, and
+tap the floor to walk the avatar around: the shortest route that fits, curving around corners, with a walk
+made entirely in code. Next: v2, adult things.
 
 The avatar is β Ver AvatarSample_1 by the VRoid Project (pixiv), CC0; see
 [public/avatars/LICENSE.md](public/avatars/LICENSE.md).

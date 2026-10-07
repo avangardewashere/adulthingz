@@ -1,4 +1,5 @@
 import { seededRandom } from '../lib/random'
+import { turn, type Pose } from './pose'
 
 // The small movements that make a standing avatar look alive. Plain maths, so the tests can
 // check the timing; AvatarModel.tsx applies the numbers to the model every frame.
@@ -47,24 +48,22 @@ export function breath(t: number) {
 // you should notice it's alive, not see it move.
 export const BREATH_SWAY = { spine: 0.012, chest: 0.02 } as const
 
+// Breathing as a pose: the spine and chest tip a little forward and back
+export function breathingPose(t: number): Pose {
+  const b = breath(t)
+  return { spine: turn(BREATH_SWAY.spine * b), chest: turn(BREATH_SWAY.chest * b) }
+}
+
 // ── Resting arms ──────────────────────────────────────────────────────────
 // VRoid avatars arrive in a T-pose (arms straight out). Lower the arms to the sides,
 // angled out a little so the hands clear the hips, with a slight bend at the elbow.
 export const ARMS_DOWN = 1.2 // radians below horizontal, about 69°
 export const ELBOW_BEND = 0.25 // radians, forearms swing a little forward
 
-export type ArmBone = 'leftUpperArm' | 'rightUpperArm' | 'leftLowerArm' | 'rightLowerArm'
-
-// Rotations for three-vrm's "normalized" bones, as [bone, axis, angle].
-// VRM 0 avatars are built facing the other way from VRM 1, which flips turns around the
-// x and z axes (three-vrm's own animation examples flip them the same way).
-// Turns around y (the elbow bend) are not affected.
-export function restingArms(metaVersion: '0' | '1'): [ArmBone, 'y' | 'z', number][] {
-  const flip = metaVersion === '0' ? -1 : 1
-  return [
-    ['leftUpperArm', 'z', -ARMS_DOWN * flip],
-    ['rightUpperArm', 'z', ARMS_DOWN * flip],
-    ['leftLowerArm', 'y', -ELBOW_BEND],
-    ['rightLowerArm', 'y', ELBOW_BEND],
-  ]
+// Written the VRM 1 way (see pose.ts); forVersion() converts it for VRM 0 avatars
+export const RESTING_POSE: Pose = {
+  leftUpperArm: turn(0, 0, -ARMS_DOWN),
+  rightUpperArm: turn(0, 0, ARMS_DOWN),
+  leftLowerArm: turn(0, -ELBOW_BEND, 0),
+  rightLowerArm: turn(0, ELBOW_BEND, 0),
 }
