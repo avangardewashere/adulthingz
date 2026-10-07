@@ -253,7 +253,7 @@ checklist, kept in the browser).
 | V2-D5 | The three adult things | Sleep (bed), cook (kitchenette), pay the bills (desk) |
 | V2-D6 | Today's checklist | Saved in the browser, resets at local midnight, broken saved data is ignored. Each item is also a button that sends the avatar to do it, so it works with a keyboard too |
 
-### Block 1: A furnished room
+### Block 1: A furnished room ✅
 - Every room shape gets a single bed (1 × 2 m), a desk with a chair (1.5 m) and a kitchenette counter
   (1.5 m, with a hob and a pot), placed against the tall back and left walls so they stay in view.
   Example, the square room:
@@ -277,6 +277,62 @@ checklist, kept in the browser).
 spot is a free tile reachable from the start tile; the free floor is still one connected piece (no
 piece cuts a room in two); routes never cross a furniture tile; the start tile is free. v1's walking
 tests switch from "every floor tile" to "every free tile".
+
+**As built:**
+- **Reading the letters** (`src/room/furniture.ts`): touching tiles with the same letter make one
+  piece. It must be a solid rectangle of the right size (bed 2 × 4 tiles, desk and counter 3 × 1,
+  either way round), and its `back` is the wall it stands against: the long side for desk and
+  counter, the head end for the bed. The use spot is in front of the middle (desk, counter) or
+  beside the bed's 2nd tile from the head, on a long side that isn't a wall (camera side first).
+  Anything wrong is refused with a message saying which piece and why.
+- **Free floor** (`roomLayout.ts`): the room plan now carries the furniture and a `blocked` grid.
+  Walls and the floor are drawn from *floor*, while routes, the body check and the start tile use
+  *free* floor (`isFree`, `freeTiles`). The start tile is still the free tile nearest the middle
+  of the whole floor, so it didn't move in any room.
+- **Shapes** (`src/room/furnitureParts.ts`): each piece is a short list of boxes, rounded boxes and a
+  cylinder, written once in the piece's own frame (along the wall, out from it, up), then turned to
+  whichever wall it stands against. Bed: walnut frame and headboard, linen mattress (top 0.46 m) and
+  pillow, sage duvet. Desk: linen top at 0.75 m, walnut legs, charcoal laptop with a lilac screen
+  leaning back, peach chair tucked under (its backrest sits 4 cm past the desk edge). Kitchenette:
+  linen cupboards with door gaps and walnut handles, walnut worktop at 0.9 m, charcoal hob with a
+  bubblegum pot, chopping board, splashback. New palette colours: walnut, linen, sage, peach,
+  charcoal.
+
+**Tests** (`src/room/furniture.test.ts`, 21 runs; v1's walking tests now use free tiles)
+- V2B1-T1: every room has one bed, one desk, one kitchenette, each the right size.
+- V2B1-T2: every piece stands on floor, blocks its tiles, and has no floor behind its back side.
+- V2B1-T3: use spots are free, separate, and touch their piece's side (exact spots checked in the
+  square room).
+- V2B1-T4: the free floor is one piece and every use spot can be walked to from the start tile.
+- V2B1-T5: every walk from the start tile keeps the body off furniture; furniture tiles can't be
+  walked to. T5b: past the foot of the bed the walk bends round it.
+- V2B1-T6: every shape stays on its piece's tiles (the chair back may peek out 5 cm), never below
+  the floor, in palette colours, with real-world heights (bed 0.4–0.6 m, desk 0.72–0.78 m, worktop
+  0.86–0.92 m). T6b: a desk turned to another wall turns its shapes with it.
+- V2B1-T7: wrong size, not a rectangle, not against a wall, no floor to stand on, and a bed with no
+  free side are each refused with a clear message.
+- Added to Block 0's tests, **B0-T7**: no two source files in a folder may differ only by capitals or
+  extension (see below).
+
+**Checked in the browser:** all three rooms furnished, nothing hidden behind a wall; walking from
+beside the head of the bed to below its foot, the avatar's body never crossed the bed (0 of the
+recorded positions overlapped it); no console errors.
+
+**What went wrong and what caught it:**
+- The furniture component was first called `Furniture.tsx`, next to `furniture.ts`. Windows treats
+  those as the same name, so the page imported the wrong file and failed to load. Every unit test
+  still passed (none imports the component); the browser check caught it. Renamed to
+  `RoomFurniture.tsx`, and B0-T7 now fails on any such pair.
+- Planted bugs: routes allowed onto furniture tiles (caught by V2B1-T5b and B3-T2), and the body
+  check ignoring furniture. The second was at first caught only by T5b, because T5 judged walks with
+  that same body check. T5 now measures against the furniture rectangles directly and catches it in
+  all three rooms.
+
+**Summary (done 2026-10-08):** Every room now has a bed, a desk with a tucked-in chair and a
+kitchenette, written as letters in the room text and drawn in code at real-world heights, and the
+avatar walks around them. 168 tests pass, and two planted bugs proved the "around, never through"
+rules bite. The browser check also caught a Windows file-name clash the tests missed, now guarded by
+a test of its own.
 
 ### Block 2: Doing a thing
 - Tap a piece of furniture: the avatar walks to its use spot, turns to face it and does its thing for

@@ -1,4 +1,5 @@
 import { FLOOR_THICKNESS, STAGE, TILE, WALL } from '../scene/stageSize'
+import { LETTERS, findFurniture, type Piece } from './furniture'
 
 // Turns a room drawn as text (see roomShapes.ts) into floor, walls and corner posts.
 // Plain maths, no three.js, so the tests can check every rule with numbers.
@@ -20,6 +21,8 @@ export interface RoomPlan {
   cols: number
   rows: number
   floor: boolean[][] // floor[row][col]
+  furniture: Piece[]
+  blocked: boolean[][] // floor with furniture on it: nobody walks there
 }
 
 export interface Tile {
@@ -60,19 +63,35 @@ export interface Box {
 export function parseRoom(text: readonly string[]): RoomPlan {
   if (text.length === 0) throw new Error('A room needs at least one row')
   const cols = text[0].length
-  const floor = text.map((line, row) => {
+  // marks[row][col]: the furniture letter on that tile, '' for none
+  const marks = text.map((line, row) => {
     if (line.length !== cols) throw new Error(`Row ${row} has ${line.length} tiles, expected ${cols}`)
     return [...line].map((ch, col) => {
-      if (ch === '#') return true
-      if (ch === '.') return false
+      if (ch === '#' || ch === '.') return ''
+      if (Object.hasOwn(LETTERS, ch)) return ch
       throw new Error(`Unknown tile "${ch}" at row ${row}, column ${col}`)
     })
   })
-  return { cols, rows: text.length, floor }
+  const floor = text.map((line) => [...line].map((ch) => ch !== '.'))
+  const grid = { cols, rows: text.length, floor }
+  return {
+    ...grid,
+    furniture: findFurniture(grid, marks),
+    blocked: marks.map((line) => line.map((mark) => mark !== '')),
+  }
 }
 
 export function isFloor(plan: RoomPlan, col: number, row: number) {
   return row >= 0 && row < plan.rows && col >= 0 && col < plan.cols && plan.floor[row][col]
+}
+
+// Floor with nothing standing on it: the avatar can walk here
+export function isFree(plan: RoomPlan, col: number, row: number) {
+  return isFloor(plan, col, row) && !plan.blocked[row][col]
+}
+
+export function freeTiles(plan: RoomPlan): Tile[] {
+  return floorTiles(plan).filter((t) => !plan.blocked[t.row][t.col])
 }
 
 export function floorTiles(plan: RoomPlan): Tile[] {

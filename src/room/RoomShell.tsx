@@ -3,6 +3,7 @@ import type { ThreeEvent } from '@react-three/fiber'
 import { PALETTE } from '../theme/palette'
 import { isTap } from '../lib/tap'
 import { FLOOR_MATERIAL, WALL_MATERIAL } from './roomMaterials'
+import { RoomFurniture } from './RoomFurniture'
 import {
   floorBox,
   floorRects,
@@ -65,6 +66,8 @@ export function RoomShell({ plan, onFloorTap }: { plan: RoomPlan; onFloorTap?: (
         </bufferGeometry>
         <lineBasicMaterial color={PALETTE.grain} transparent opacity={0.3} />
       </lineSegments>
+
+      <RoomFurniture plan={plan} />
     </group>
   )
 }

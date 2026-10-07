@@ -1,10 +1,10 @@
-import { isFloor, tileAt, tileCentre, type RoomPlan, type Tile } from '../room/roomLayout'
+import { isFree, tileAt, tileCentre, type RoomPlan, type Tile } from '../room/roomLayout'
 
 // Finding a way across the room. Plain maths, no three.js.
 //
-// 1. findPath: the shortest chain of tiles (A* search). Steps go to any of the 8 tiles
-//    around, but a diagonal step is only allowed when both tiles beside it are floor,
-//    so the route never squeezes past a wall corner.
+// 1. findPath: the shortest chain of free tiles (A* search; furniture tiles are not free).
+//    Steps go to any of the 8 tiles around, but a diagonal step is only allowed when both
+//    tiles beside it are free, so the route never squeezes past a corner.
 // 2. smoothPath: tile-to-tile routes zig-zag. Wherever the avatar's body still fits along
 //    a straight line, skip the tiles in between: open floor becomes one straight walk,
 //    and the L's bend becomes a short curve around the corner.
@@ -29,7 +29,7 @@ const STEPS = [
 ] as const
 
 export function findPath(plan: RoomPlan, from: Tile, to: Tile): Tile[] | null {
-  if (!isFloor(plan, from.col, from.row) || !isFloor(plan, to.col, to.row)) return null
+  if (!isFree(plan, from.col, from.row) || !isFree(plan, to.col, to.row)) return null
   const key = (col: number, row: number) => row * plan.cols + col
   const h = (col: number, row: number) => octile(Math.abs(col - to.col), Math.abs(row - to.row))
 
@@ -53,9 +53,9 @@ export function findPath(plan: RoomPlan, from: Tile, to: Tile): Tile[] | null {
     for (const [dc, dr] of STEPS) {
       const col = tile.col + dc
       const row = tile.row + dr
-      if (!isFloor(plan, col, row) || closed.has(key(col, row))) continue
+      if (!isFree(plan, col, row) || closed.has(key(col, row))) continue
       // no cutting corners: a diagonal needs floor on both sides
-      if (dc !== 0 && dr !== 0 && !(isFloor(plan, tile.col + dc, tile.row) && isFloor(plan, tile.col, tile.row + dr))) continue
+      if (dc !== 0 && dr !== 0 && !(isFree(plan, tile.col + dc, tile.row) && isFree(plan, tile.col, tile.row + dr))) continue
       const next = cost.get(k)! + (dc !== 0 && dr !== 0 ? Math.SQRT2 : 1)
       const known = cost.get(key(col, row))
       if (known === undefined || next < known) {
@@ -68,12 +68,17 @@ export function findPath(plan: RoomPlan, from: Tile, to: Tile): Tile[] | null {
   return null // no way there
 }
 
+// Is there free floor (no furniture) under this point?
+function freeAt(plan: RoomPlan, x: number, z: number) {
+  const tile = tileAt(plan, x, z)
+  return tile !== null && isFree(plan, tile.col, tile.row)
+}
+
 // Does the avatar's body fit with its centre here? Checking the 4 corners of its square is
-// enough: the square (0.4 m) is smaller than a tile, so if all 4 corners are on floor
-// tiles, every tile it touches is floor.
+// enough: the square (0.4 m) is smaller than a tile, so if all 4 corners are on free
+// tiles, every tile it touches is free (no wall, no furniture).
 export function fits(plan: RoomPlan, x: number, z: number, r = AVATAR_RADIUS) {
-  return tileAt(plan, x - r, z - r) !== null && tileAt(plan, x + r, z - r) !== null &&
-    tileAt(plan, x - r, z + r) !== null && tileAt(plan, x + r, z + r) !== null
+  return freeAt(plan, x - r, z - r) && freeAt(plan, x + r, z - r) && freeAt(plan, x - r, z + r) && freeAt(plan, x + r, z + r)
 }
 
 // Can the avatar walk straight from a to b? Checked every 2 cm.

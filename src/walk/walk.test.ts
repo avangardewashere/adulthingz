@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ROOM_SHAPES, findShape } from '../room/roomShapes'
-import { corners, floorTiles, isFloor, lineX, lineZ, parseRoom, tileAt, tileCentre, type Tile } from '../room/roomLayout'
+import { corners, freeTiles, isFree, lineX, lineZ, parseRoom, tileAt, tileCentre, type Tile } from '../room/roomLayout'
 import {
   AVATAR_RADIUS,
   clearLine,
@@ -47,10 +47,10 @@ describe('Block 3: tap to walk', () => {
   // Square and rectangle: from the start tile. L-shape: from EVERY tile to every tile, because
   // only routes that pass its inside corner can catch a diagonal step cutting that corner.
   const routes = plans.flatMap(({ shape, plan }) =>
-    (shape.id === 'lshape' ? floorTiles(plan) : [spawnTile(plan)]).map((from) => ({ shape, plan, from })),
+    (shape.id === 'lshape' ? freeTiles(plan) : [spawnTile(plan)]).map((from) => ({ shape, plan, from })),
   )
-  it.each(routes)('B3-T2: $shape.label from $from.col,$from.row: a path to every floor tile, on floor only', ({ plan, from }) => {
-    for (const to of floorTiles(plan)) {
+  it.each(routes)('B3-T2: $shape.label from $from.col,$from.row: a path to every free tile, on free floor only', ({ plan, from }) => {
+    for (const to of freeTiles(plan)) {
       const path = findPath(plan, from, to)!
       expect(path, `to ${to.col},${to.row}`).not.toBeNull()
       expect(path[0]).toEqual(from)
@@ -59,11 +59,11 @@ describe('Block 3: tap to walk', () => {
         const [a, b] = [path[i - 1], path[i]]
         const dc = b.col - a.col
         const dr = b.row - a.row
-        expect(isFloor(plan, b.col, b.row)).toBe(true)
+        expect(isFree(plan, b.col, b.row)).toBe(true) // floor with no furniture
         expect(Math.max(Math.abs(dc), Math.abs(dr))).toBe(1) // one step to a neighbour
         if (dc !== 0 && dr !== 0) {
           // a diagonal step never slips past a corner
-          expect(isFloor(plan, a.col + dc, a.row) && isFloor(plan, a.col, a.row + dr)).toBe(true)
+          expect(isFree(plan, a.col + dc, a.row) && isFree(plan, a.col, a.row + dr)).toBe(true)
         }
       }
     }
@@ -73,10 +73,11 @@ describe('Block 3: tap to walk', () => {
     const square = planOf('square')
     const cost = (path: Tile[]) =>
       path.slice(1).reduce((sum, t, i) => sum + (t.col !== path[i].col && t.row !== path[i].row ? Math.SQRT2 : 1), 0)
-    const path = findPath(square, { col: 0, row: 0 }, { col: 7, row: 3 })!
-    expect(cost(path)).toBeCloseTo(octile(7, 3), 9)
+    // (from the front-left to the back-right: clear of the bed, desk and kitchenette)
+    const path = findPath(square, { col: 2, row: 7 }, { col: 7, row: 3 })!
+    expect(cost(path)).toBeCloseTo(octile(5, 4), 9)
     // smoothed, it's a straight walk from the first tile centre to the last
-    const start = tileCentre(square, { col: 0, row: 0 })
+    const start = tileCentre(square, { col: 2, row: 7 })
     const walk = smoothPath(square, start, path)
     expect(walk).toHaveLength(2)
     expect(pathLength(walk)).toBeCloseTo(distance(start, tileCentre(square, { col: 7, row: 3 })), 9)
@@ -104,7 +105,7 @@ describe('Block 3: tap to walk', () => {
 
   it.each(plans)('B3-T4b: $shape.label: every walk from the start tile keeps the body on the floor', ({ plan }) => {
     const start = tileCentre(plan, spawnTile(plan))
-    for (const goal of floorTiles(plan)) {
+    for (const goal of freeTiles(plan)) {
       const walk = planWalk(plan, start, goal)
       if (!walk) continue // the start tile itself
       for (const p of samples(walk)) expect(fits(plan, p.x, p.z), `to ${goal.col},${goal.row}`).toBe(true)
@@ -117,7 +118,8 @@ describe('Block 3: tap to walk', () => {
     expect(planWalk(split, tileCentre(split, { col: 0, row: 0 }), { col: 5, row: 0 })).toBeNull()
     const square = planOf('square')
     expect(planWalk(square, tileCentre(square, { col: 3, row: 3 }), { col: 3, row: 3 })).toBeNull()
-    expect(findPath(square, { col: 0, row: 0 }, { col: 9, row: 9 })).toBeNull() // off the floor
+    expect(findPath(square, { col: 3, row: 3 }, { col: 9, row: 9 })).toBeNull() // off the floor
+    expect(findPath(square, { col: 3, row: 3 }, { col: 0, row: 0 })).toBeNull() // onto the bed
   })
 
   it('B3-T6: the walker arrives exactly, at walking speed, and turns the short way at a steady rate', () => {

@@ -10,6 +10,11 @@ export const PALETTE = {
   wall: '#DCD1F2', // room walls: a soft lavender, a step deeper than the backdrop
   wood: '#D7B48E', // floor: light oak
   grain: '#A57E58', // the faint tile lines on the floor
+  walnut: '#9B7352', // furniture wood: bed frame, desk legs, worktop (darker than the floor)
+  linen: '#F4EFE8', // white furniture: mattress, pillow, desktop, kitchen cupboards
+  sage: '#A9CDB7', // the duvet
+  peach: '#F2B8A0', // the desk chair
+  charcoal: '#3A3546', // laptop, hob
 } as const
 
 export type PaletteName = keyof typeof PALETTE

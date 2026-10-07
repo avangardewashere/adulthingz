@@ -1,7 +1,8 @@
 import { TILE } from '../scene/stageSize'
 
 // The rooms you can pick, drawn as text: one string per row of 50 cm tiles.
-//   '#' = floor    '.' = no floor
+//   '#' = free floor    '.' = no floor
+//   'B' = bed    'D' = desk    'K' = kitchenette   (floor with furniture on it, see furniture.ts)
 // The first string is the back of the room (far from the camera) and the first
 // character of each string is its left side, so the text looks like the room seen from above.
 
@@ -18,13 +19,13 @@ export const ROOM_SHAPES: readonly RoomShape[] = [
     id: 'square', // 4 × 4 m
     label: 'Square',
     rows: [
-      '########',
-      '########',
-      '########',
-      '########',
-      '########',
-      '########',
-      '########',
+      'BB###KKK',
+      'BB######',
+      'BB######',
+      'BB######',
+      'D#######',
+      'D#######',
+      'D#######',
       '########',
     ],
   },
@@ -32,14 +33,14 @@ export const ROOM_SHAPES: readonly RoomShape[] = [
     id: 'rectangle', // 6 × 4 m
     label: 'Rectangle',
     rows: [
+      'BB#####KKK##',
+      'BB##########',
+      'BB##########',
+      'BB##########',
       '############',
-      '############',
-      '############',
-      '############',
-      '############',
-      '############',
-      '############',
-      '############',
+      'D###########',
+      'D###########',
+      'D###########',
     ],
   },
   {
@@ -48,15 +49,15 @@ export const ROOM_SHAPES: readonly RoomShape[] = [
     id: 'lshape',
     label: 'L-shape',
     rows: [
+      'BB####KKK###',
+      'BB##########',
+      'BB##########',
+      'BB##########',
       '############',
       '############',
-      '############',
-      '############',
-      '############',
-      '############',
-      '######......',
-      '######......',
-      '######......',
+      'D#####......',
+      'D#####......',
+      'D#####......',
       '######......',
     ],
   },

@@ -1,3 +1,5 @@
+import { readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { PALETTE } from './theme/palette'
 import { APP_NAME, WORDMARK_PARTS } from './brand/brand'
@@ -33,6 +35,19 @@ describe('Block 0: groundwork', () => {
     // lowest the camera can get: tilted fully down, zoomed fully in, still above y = 0
     const lowest = TARGET.y + DISTANCE.min * Math.cos(ORBIT.maxPolar)
     expect(lowest).toBeGreaterThan(0)
+  })
+
+  it('B0-T7: no two source files in a folder differ only by capitals or extension', () => {
+    // On Windows "Furniture.tsx" and "furniture.ts" are the same name, so an import of
+    // "./Furniture" can pick the wrong file (it happened in v2 Block 1). Keep names distinct.
+    const src = fileURLToPath(new URL('.', import.meta.url))
+    const files = readdirSync(src, { recursive: true, encoding: 'utf8' }).filter((f) => /\.(ts|tsx)$/.test(f))
+    const seen = new Map<string, string>()
+    for (const file of files) {
+      const key = file.replace(/\\/g, '/').replace(/\.(ts|tsx)$/, '').toLowerCase()
+      expect(seen.get(key), `${file} clashes with ${seen.get(key)}`).toBeUndefined()
+      seen.set(key, file)
+    }
   })
 
   it.each([0.45, 0.75, 1, 1.6, 2.4])('B0-T6: start view for screen shape %f sits inside the limits', (aspect) => {

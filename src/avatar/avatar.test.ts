@@ -8,7 +8,7 @@ import { forVersion, turn } from './pose'
 import { percentOf, statusText } from './avatarStore'
 import { AVATAR } from './avatarFile'
 import { ROOM_SHAPES, findShape } from '../room/roomShapes'
-import { isFloor, parseRoom } from '../room/roomLayout'
+import { isFree, parseRoom } from '../room/roomLayout'
 import { STAGE } from '../scene/stageSize'
 
 // The real avatar file, read the way the app ships it
@@ -70,10 +70,10 @@ describe('Block 2: the avatar arrives', () => {
     expect(forVersion({ chest: turn(0.1, 0.2, 0.3) }, '1').chest).toEqual({ x: 0.1, y: 0.2, z: 0.3 })
   })
 
-  it.each(ROOM_SHAPES)('B2-T5: in the $label room the avatar starts on a floor tile', (shape) => {
+  it.each(ROOM_SHAPES)('B2-T5: in the $label room the avatar starts on a free floor tile', (shape) => {
     const plan = parseRoom(shape.rows)
     const tile = spawnTile(plan)
-    expect(isFloor(plan, tile.col, tile.row)).toBe(true)
+    expect(isFree(plan, tile.col, tile.row)).toBe(true) // floor, and no furniture on it
   })
 
   it('B2-T5b: the start tile is the middle of the floor, a touch towards the camera on a tie', () => {
