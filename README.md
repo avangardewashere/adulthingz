@@ -6,8 +6,9 @@
 
 ## Status
 
-**Block 0 (groundwork) done:** the wordmark, the colour palette, and an empty 3D stage with a camera
-that fits any screen. Next is v1: pick a room shape, meet your avatar, tap to walk.
+**v1 Block 1 (room shapes) done:** pick a square, rectangle or L-shaped room; walls build themselves
+from a tile grid, with the camera-side walls cut low so you can look in. Next: your avatar arrives
+(Block 2), then tap to walk (Block 3).
 The full build guide is in [docs/PLAN.md](docs/PLAN.md).
 
 ## Run it

@@ -1,15 +1,22 @@
+import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { CameraFit } from './CameraFit'
 import { Lighting } from './Lighting'
-import { PlaceholderFloor } from './PlaceholderFloor'
-import { DISTANCE, FOV, ORBIT, TARGET } from './cameraRig'
+import { DISTANCE, FOV, ORBIT, TARGET, radiusFor } from './cameraRig'
+import { RoomShell } from '../room/RoomShell'
+import { parseRoom, roomSize } from '../room/roomLayout'
+import { findShape, type RoomShapeId } from '../room/roomShapes'
 
 // The 3D view. The canvas is transparent, so the page's backdrop shows behind it.
-export function RoomScene() {
+export function RoomScene({ shapeId }: { shapeId: RoomShapeId }) {
+  const plan = useMemo(() => parseRoom(findShape(shapeId).rows), [shapeId])
+  const { width, depth } = roomSize(plan)
+
   return (
     <Canvas
-      shadows
+      // percentage = PCF shadows; three 0.186 dropped the "soft" kind fiber asks for by default
+      shadows="percentage"
       // flat = no tone mapping: colours on screen match the palette (and, in Block 2, the
       // avatar's anime textures) instead of being washed towards grey
       flat
@@ -19,7 +26,8 @@ export function RoomScene() {
       gl={{ alpha: true, antialias: true }}
     >
       <Lighting />
-      <PlaceholderFloor />
+      {/* key: a new shape builds a fresh room (React swaps it out, three frees the old shapes) */}
+      <RoomShell key={shapeId} plan={plan} />
       <OrbitControls
         makeDefault
         target={[TARGET.x, TARGET.y, TARGET.z]}
@@ -32,7 +40,7 @@ export function RoomScene() {
         minDistance={DISTANCE.min}
         maxDistance={DISTANCE.max}
       />
-      <CameraFit />
+      <CameraFit radius={radiusFor(width, depth)} />
     </Canvas>
   )
 }

@@ -1,5 +1,5 @@
-// Sizes in metres. Block 0 only has a placeholder floor; Block 1 builds real rooms
-// out of TILE-sized squares, and every room shape it offers fits inside STAGE.
+// Sizes in metres. Rooms are built out of TILE-sized squares (see src/room),
+// and every room shape on offer fits inside STAGE.
 
 export const TILE = 0.5 // one floor tile is 50 × 50 cm
 
@@ -10,3 +10,9 @@ export const STAGE = {
 } as const
 
 export const FLOOR_THICKNESS = 0.1
+
+export const WALL = {
+  thickness: 0.12,
+  // Walls on the camera's side are cut down to this, so you can see into the room (dollhouse)
+  low: 0.3,
+} as const

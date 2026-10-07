@@ -7,7 +7,9 @@ export const PALETTE = {
   grape: '#6A3DE8', // the "thing" in the wordmark, main accent
   bubblegum: '#C92A6B', // the "z" in the wordmark, second accent
   lilac: '#E6DEFA', // backdrop gradient, soft panels
-  oat: '#E8DCCB', // placeholder floor (Block 1 brings real room colours)
+  wall: '#DCD1F2', // room walls: a soft lavender, a step deeper than the backdrop
+  wood: '#D7B48E', // floor: light oak
+  grain: '#A57E58', // the faint tile lines on the floor
 } as const
 
 export type PaletteName = keyof typeof PALETTE

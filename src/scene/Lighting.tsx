@@ -9,12 +9,12 @@ export function Lighting() {
   return (
     <>
       {/* Lights every surface equally, so nothing goes fully dark */}
-      <ambientLight color="#FFFFFF" intensity={1.6} />
+      <ambientLight color="#FFFFFF" intensity={2.1} />
 
       {/* "Sun" from the front-right, the only light that casts shadows (the avatar's, from Block 2) */}
       <directionalLight
         color="#FFFFFF"
-        intensity={1.4}
+        intensity={1.3}
         position={[4, 8, 5]}
         castShadow
         shadow-mapSize={[1024, 1024]}

@@ -30,10 +30,10 @@ and a build on every push (`.github/workflows/ci.yml`).
 | # | Decision | Status |
 | - | -------- | ------ |
 | D1 | Room first, avatar imported. Customising the avatar comes later as a version, not a separate project | ✅ taken: you started Block 0 of this plan |
-| D2 | Avatar source: your own avatar from VRoid Studio, or a CC0 VRoid sample (AvatarSample D–G) as a stand-in until yours is ready | 🟡 needed before Block 2 |
+| D2 | Avatar source: a CC0 VRoid sample (AvatarSample D–G; A–C are **not** CC0) | ✅ chosen 2026-10-07; which of D–G is picked in Block 2 |
 | D3 | Look: light "paper" backdrop, ink text, grape + bubblegum accents; wordmark font Bricolage Grotesque | ✅ Block 0 (change any colour in `src/theme/palette.ts`) |
-| D4 | View: dollhouse. The camera looks in from the front-right and turns within limits; no first-person walking | 🟡 recommended for Block 1 |
-| D5 | A room is a set of 0.5 m floor tiles. Walls go wherever a tile has no neighbour, so every shape uses the same code | 🟡 recommended for Block 1 |
+| D4 | View: dollhouse. The camera looks in from the front-right and turns within limits; no first-person walking | ✅ taken with "go ahead with Block 1" |
+| D5 | A room is a set of 0.5 m floor tiles. Walls go wherever a tile has no neighbour, so every shape uses the same code | ✅ taken with "go ahead with Block 1" |
 | D6 | Walk animation: Mixamo clips converted for VRM, pixiv's `.vrma` clips, or a simple walk made in code | 🟡 decide at Block 3 |
 
 ---
@@ -49,8 +49,12 @@ set from that file when the app starts, so there is only one list to change.
 | `ink`       | `#1E1A2B` | text, the **adul** in the wordmark                    |
 | `grape`     | `#6A3DE8` | the **thing** in the wordmark, main accent            |
 | `bubblegum` | `#C92A6B` | the **z** in the wordmark, second accent              |
-| `lilac`     | `#E6DEFA` | backdrop gradient, soft panels                        |
-| `oat`       | `#E8DCCB` | placeholder floor (Block 1 brings real room colours)  |
+| `lilac`     | `#E6DEFA` | backdrop gradient, soft panels, picker hover          |
+| `wall`      | `#DCD1F2` | room walls: soft lavender, a step deeper than lilac   |
+| `wood`      | `#D7B48E` | floor: light oak                                      |
+| `grain`     | `#A57E58` | the faint tile lines on the floor                     |
+
+(Block 0 had an `oat` placeholder floor colour; Block 1 replaced it with `wood`.)
 
 Every wordmark colour must reach 4.5:1 contrast on `paper`, the bar for normal-size text, so the same
 colours stay usable for small labels later.
@@ -91,7 +95,7 @@ and a build on every push.
 
 ## v1: Your room, your avatar
 
-### Block 1: Room shapes
+### Block 1: Room shapes ✅
 - A room is written as rows of tiles (`#` = floor, `.` = nothing), turned into floor tiles and walls.
   Walls go up on every tile edge that has no floor next to it. The two walls nearest the camera stay
   low so you can see in (dollhouse).
@@ -99,13 +103,40 @@ and a build on every push.
   (6 × 5 m with a corner cut out). Switching rebuilds the room.
 - The camera re-fits to the room you picked.
 
-**Tests:** every shape is one connected piece; a wall exists exactly where a floor edge has no
-neighbour (a square's wall count = its perimeter in tiles); every shape fits inside the 6 × 6 m
-stage; the L-shape has exactly one inside corner.
+**As built:** shapes in `src/room/roomShapes.ts`; all the rules in `src/room/roomLayout.ts` (pure, no
+three.js): walls stand *outside* the floor so every tile stays walkable, edges in a line join into one
+wall, posts fill the gaps at outside corners, the floor is drawn as the fewest rectangles. The L's
+cut-out is at the front-right, so its walls are low and you look into the bend. The picker is real radio
+buttons (arrow keys work) with icons drawn from the same rows. Switching rooms keeps the angle you
+turned the camera to and only changes the distance. Not saved after a reload (backlog).
+
+**Tests** (`src/room/rooms.test.ts`, 27 runs)
+- B1-T1: every shape is one connected piece (and two separate pieces are caught).
+- B1-T2: a wall exists exactly where a floor edge has no neighbour; a square has 32 wall edges (its
+  perimeter in tiles).
+- B1-T3: every shape fits the 6 × 6 m stage and matches the size the picker shows.
+- B1-T4: the L-shape has exactly 1 inside corner and 5 outside; square and rectangle have 0 and 4.
+- B1-T5: far walls are full height, camera-side walls are low, and all the L's cut-out walls are low.
+- B1-T6: joined walls cover every wall edge exactly once; a square has 4 walls, the L-shape 6; a gap
+  in a line of wall stays a gap (U-shaped test room); floor blocks cover every tile once; no wall
+  stands on a floor tile.
+- B1-T7: every room fits the screen within the zoom limits on every screen shape; every outside
+  corner of the walls is inside the camera fit; a bigger room puts the camera further back; picking
+  another room keeps the camera angle.
+- B1-T8: a room drawn wrong (no rows, uneven rows, unknown letter) is refused with a clear message.
+
+Planted bugs caught: the first camera-fit maths (wall tops poked out of the frame on a phone, found in
+the browser and now guarded by B1-T7), and walls bridging a gap in a line.
+
+**Summary (done 2026-10-07):** You can pick a square, rectangle or L-shaped room, and the same tile rule
+builds each one's floor, walls and corner posts, with the camera-side walls cut low so you can see in.
+The camera re-fits to each room but keeps your angle, and the picker works by mouse, touch and keyboard.
+39 tests pass, including two that caught real or planted bugs in the camera fit and the wall joining.
 
 ### Block 2: The avatar arrives
-- Add `@pixiv/three-vrm`. Load the avatar (`public/avatars/*.vrm`, decision D2) and stand it in the
-  room, facing the camera, at real-world scale next to the 2.6 m walls.
+- Add `@pixiv/three-vrm`. Load the avatar (`public/avatars/*.vrm`: a CC0 VRoid sample, AvatarSample
+  D–G, decision D2; keep its licence note next to the file) and stand it in the room, facing the
+  camera, at real-world scale next to the 2.6 m walls.
 - Idle life: arms relaxed down (VRoid exports in a T-pose), gentle breathing, a blink every few seconds.
 - A small "loading avatar…" note, and a clear message if the file fails to load.
 
