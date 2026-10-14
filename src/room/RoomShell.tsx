@@ -4,6 +4,7 @@ import { PALETTE } from '../theme/palette'
 import { isTap } from '../lib/tap'
 import { FLOOR_MATERIAL, WALL_MATERIAL } from './roomMaterials'
 import { RoomFurniture } from './RoomFurniture'
+import type { ThingKind } from '../things/things'
 import {
   floorBox,
   floorRects,
@@ -22,7 +23,15 @@ const setCursor = (cursor: string) => (document.body.style.cursor = cursor)
 // The empty room: floor blocks, walls, corner posts and faint tile lines.
 // All the maths is in roomLayout.ts; this only hands the boxes to three.js.
 // Tapping the floor reports the tile; a drag (turning the camera) doesn't count.
-export function RoomShell({ plan, onFloorTap }: { plan: RoomPlan; onFloorTap?: (tile: Tile) => void }) {
+export function RoomShell({
+  plan,
+  onFloorTap,
+  onUse,
+}: {
+  plan: RoomPlan
+  onFloorTap?: (tile: Tile) => void
+  onUse?: (thing: ThingKind) => void
+}) {
   // the pointer cursor must not stick if the room is swapped while hovering it
   useEffect(() => () => void setCursor(''), [])
 
@@ -67,7 +76,7 @@ export function RoomShell({ plan, onFloorTap }: { plan: RoomPlan; onFloorTap?: (
         <lineBasicMaterial color={PALETTE.grain} transparent opacity={0.3} />
       </lineSegments>
 
-      <RoomFurniture plan={plan} />
+      <RoomFurniture plan={plan} onUse={onUse} />
     </group>
   )
 }

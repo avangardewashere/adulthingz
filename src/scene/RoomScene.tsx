@@ -7,14 +7,14 @@ import { DISTANCE, FOV, ORBIT, TARGET, radiusFor } from './cameraRig'
 import { RoomShell } from '../room/RoomShell'
 import { parseRoom, roomSize } from '../room/roomLayout'
 import { findShape, type RoomShapeId } from '../room/roomShapes'
-import { Avatar, type WalkRequest } from '../avatar/AvatarModel'
+import { Avatar, type AvatarRequest } from '../avatar/AvatarModel'
 
 // The 3D view. The canvas is transparent, so the page's backdrop shows behind it.
 export function RoomScene({ shapeId }: { shapeId: RoomShapeId }) {
   const plan = useMemo(() => parseRoom(findShape(shapeId).rows), [shapeId])
   const { width, depth } = roomSize(plan)
-  // the latest floor tap; the avatar works out how to get there
-  const [request, setRequest] = useState<WalkRequest | null>(null)
+  // the latest tap (a floor tile, or a piece of furniture); the avatar works out the rest
+  const [request, setRequest] = useState<AvatarRequest | null>(null)
 
   return (
     <Canvas
@@ -30,7 +30,12 @@ export function RoomScene({ shapeId }: { shapeId: RoomShapeId }) {
     >
       <Lighting />
       {/* key: a new shape builds a fresh room (React swaps it out, three frees the old shapes) */}
-      <RoomShell key={shapeId} plan={plan} onFloorTap={(tile) => setRequest({ tile, id: performance.now() })} />
+      <RoomShell
+        key={shapeId}
+        plan={plan}
+        onFloorTap={(tile) => setRequest({ type: 'walk', tile, id: performance.now() })}
+        onUse={(thing) => setRequest({ type: 'use', thing, id: performance.now() })}
+      />
       <Avatar plan={plan} request={request} />
       <OrbitControls
         makeDefault

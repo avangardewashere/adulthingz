@@ -100,20 +100,31 @@ const FRAME: Record<Side, { F: [number, number]; L: [number, number] }> = {
   east: { F: [-1, 0], L: [0, 1] },
 }
 
-export function furnitureParts(plan: RoomPlan, piece: Piece): Part[] {
+// A piece's own frame on the floor: `origin` is the middle of the edge against the wall,
+// F points out into the room, L runs along the wall. Also used to place the avatar (thingPoses.ts).
+export function pieceFrame(plan: RoomPlan, piece: Piece) {
   const x0 = lineX(plan, piece.col)
   const x1 = lineX(plan, piece.col + piece.cols)
   const z0 = lineZ(plan, piece.row)
   const z1 = lineZ(plan, piece.row + piece.rows)
-  // the middle of the edge that touches the wall
   const origin: Record<Side, [number, number]> = {
     north: [(x0 + x1) / 2, z0],
     south: [(x0 + x1) / 2, z1],
     west: [x0, (z0 + z1) / 2],
     east: [x1, (z0 + z1) / 2],
   }
-  const [cx, cz] = origin[piece.back]
-  const { F, L } = FRAME[piece.back]
+  return { origin: origin[piece.back], ...FRAME[piece.back] }
+}
+
+// The chair is drawn apart from the desk so it can slide out (see RoomFurniture.tsx)
+export const isChairPart = (part: Part) => part.name.startsWith('chair')
+
+export function furnitureParts(plan: RoomPlan, piece: Piece): Part[] {
+  const {
+    origin: [cx, cz],
+    F,
+    L,
+  } = pieceFrame(plan, piece)
   const outAlongZ = F[0] === 0
 
   return LOCAL_PARTS[piece.kind].map((p) => {

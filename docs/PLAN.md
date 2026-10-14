@@ -334,7 +334,7 @@ avatar walks around them. 168 tests pass, and two planted bugs proved the "aroun
 rules bite. The browser check also caught a Windows file-name clash the tests missed, now guarded by
 a test of its own.
 
-### Block 2: Doing a thing
+### Block 2: Doing a thing ✅
 - Tap a piece of furniture: the avatar walks to its use spot, turns to face it and does its thing for
   about 4 s:
   - **Sleep:** lies down on the bed, eyes closed, a few "z" letters float up, and the room dims as if
@@ -349,6 +349,62 @@ a test of its own.
 facing the piece; each thing lasts its set time and ends standing on the use spot; a floor tap
 cancels it; the poses are within human limits (knees bend forward only, sitting puts the thighs
 level); the room's night dim returns to day exactly when sleep ends.
+
+**As built:**
+- **The state machine** (`src/things/activity.ts`, pure): free → approach → turn → enter → hold →
+  exit → free. The v1 walker still does all the walking. A floor tap or another piece while busy
+  stops walking or turning at once; once the pose has started, the avatar first eases back out
+  from however far in it was, then does the new request. Only a thing that runs to the end is
+  reported as done (Block 3 ticks it). Tapping the piece it's already using changes nothing.
+- **Timing** (`things.ts`): ease in 1.2 s / 0.5 s / 1 s (sleep / cook / bills), 4 s of doing it,
+  ease out the same.
+- **Where the body goes** (`thingPoses.ts`, three.js maths only): lying is built from the bed's
+  frame (head 0.1 m from the headboard, feet 1.5 m along, face to the ceiling, at mattress height
+  + 0.12 m) and reached by blending position and rotation, with a 0.3 m lift so the body goes over
+  the frame, not through it. Sitting lowers the whole body 0.335 m over the use spot while the
+  chair slides 0.45 m out under it. Cooking stays standing.
+- **Bones:** cooking leans in and stirs (the right arm circles every 1.2 s, the left hand rests on
+  the counter); bills = thighs level, shins down, a small lean, hands tapping in turn; sleep keeps
+  the resting arms. All added on top of the resting pose by one 0 → 1 weight.
+- **Around the avatar**, all from the same weight (`thingStore.ts` is read in each frame loop, so no
+  React re-renders): the lights dim from day (ambient 2.1, sun 1.3) to night (0.85, 0.3) and a
+  `--night` CSS variable darkens the page backdrop (at most 40 %, so the wordmark stays readable);
+  eyes close; three grape "z"s float up; the desk chair slides; steam rises from the pot.
+- **Tapping furniture** (`RoomFurniture.tsx`): each piece is tappable (a drag still turns the
+  camera), stops the tap reaching the floor underneath, and shows a pointer cursor.
+
+**Tests** (`src/things/things.test.ts`, 35 runs)
+- V2B2-T1: in every room, tapping each piece starts a walk that ends on its use spot.
+- V2B2-T2: nothing of the pose shows until the avatar stands on the use spot facing the piece.
+- V2B2-T3: each thing lasts ease in + 4 s + ease out, is reported done exactly once, and ends
+  standing on the use spot.
+- V2B2-T4: a floor tap while busy eases out without a jump (also mid-ease-in), never counts the
+  thing, then walks to the tile.
+- V2B2-T5: tapping another piece mid-sleep gets up, then cooks; only the cooking counts. Tapping
+  the same piece again changes nothing.
+- V2B2-T6: knees only bend back, no turn beyond what a body can do, sitting thighs level and shins
+  down, none of a thing shown = exactly the resting pose.
+- V2B2-T7: the room is dark only while asleep and back to day the frame sleep ends; cooking and
+  bills never dim it; only the desk moves the chair.
+- V2B2-T8: lying fits on the bed in every room, flat and face up, head at the headboard end;
+  sitting is over the use spot, lowered.
+- V2B2-T9: the "z"s and steam rise and fade.
+
+**Checked in the browser:** sleeping lay flat (body up-axis 0), at 0.58 m, room fully dark, then
+woke at the use spot with the room back to day; at the desk the body was 0.335 m lower with the chair
+0.45 m out, and the chair went back afterwards; cooking with the right hand 1.08 m high, 18 cm from
+the pot (its top is 1.05 m); a floor tap mid-cook eased out and walked to the exact tile; no console
+errors. The first cooking pose had the hand up near the splashback (waving, not stirring); the arm
+was lowered and re-measured. The "z"s were too small to see and were made twice the size.
+
+Planted bugs caught: a cancelled thing still counting as done (V2B2-T4, T5), starting before facing
+the piece (V2B2-T2 in every room), and every thing darkening the room (V2B2-T7).
+
+**Summary (done 2026-10-08):** Tap the bed, the counter or the desk and the avatar walks over, turns
+to face it, and sleeps under a dimmed night, stirs a steaming pot, or slides the chair out and types,
+then gets up again. A tap elsewhere makes it get up first and go, and only things finished in full
+count as done, ready for the checklist. 203 tests pass, three planted bugs were caught, and the
+browser check fixed a cooking arm that waved instead of stirring.
 
 ### Block 3: Today's adult things
 - A small **Today** card lists the three adult things with a tick for each one done today, and a

@@ -14,8 +14,8 @@ export default function App() {
       <RoomScene shapeId={shapeId} />
       <header className="hud">
         <Wordmark />
-        <p className="hint hint-desktop">Click the floor to walk · drag to turn · scroll to zoom</p>
-        <p className="hint hint-touch">Tap the floor to walk · drag to turn · pinch to zoom</p>
+        <p className="hint hint-desktop">Click the floor to walk · click furniture to use it · drag to turn</p>
+        <p className="hint hint-touch">Tap the floor to walk · tap furniture to use it · drag to turn</p>
       </header>
       <div className="bottom-bar">
         <AvatarStatus />

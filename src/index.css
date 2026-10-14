@@ -31,6 +31,18 @@ body,
   background: linear-gradient(180deg, var(--paper) 30%, var(--lilac));
 }
 
+/* Night while the avatar sleeps: a layer of ink over the backdrop only. It comes before the
+   3D view in the page, so the room itself is dimmed by its lights instead (Lighting.tsx).
+   --night goes 0 → 1, set every frame it changes; 0.4 at most keeps the wordmark readable. */
+.app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  opacity: calc(var(--night, 0) * 0.4);
+  pointer-events: none;
+}
+
 .app canvas {
   touch-action: none; /* drags turn the camera instead of scrolling the page */
 }

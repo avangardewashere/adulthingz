@@ -1,9 +1,16 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { RoundedBox } from '@react-three/drei'
-import { MeshStandardMaterial } from 'three'
+import { useFrame, type ThreeEvent } from '@react-three/fiber'
+import { MeshStandardMaterial, type Group } from 'three'
 import { PALETTE, type PaletteName } from '../theme/palette'
-import { furnitureParts, type Part } from './furnitureParts'
+import { isTap } from '../lib/tap'
+import { furnitureParts, isChairPart, pieceFrame, type Part } from './furnitureParts'
+import type { Piece } from './furniture'
 import type { RoomPlan } from './roomLayout'
+import { THING_FOR, type ThingKind } from '../things/things'
+import { CHAIR_SLIDE, chairOut } from '../things/thingPoses'
+import { thingNow } from '../things/thingStore'
+import { PotSteam } from '../things/ThingEffects'
 
 // One matte material per palette colour, made once and shared by every piece in every room
 const materials = new Map<PaletteName, MeshStandardMaterial>()
@@ -12,14 +19,59 @@ function paint(color: PaletteName) {
   return materials.get(color)!
 }
 
+const setCursor = (cursor: string) => (document.body.style.cursor = cursor)
+
 // The room's furniture. All the sizes and positions come from furnitureParts.ts.
-export function RoomFurniture({ plan }: { plan: RoomPlan }) {
-  const parts = useMemo(() => plan.furniture.flatMap((piece) => furnitureParts(plan, piece)), [plan])
+// Tapping a piece asks the avatar to go and use it (a drag still turns the camera).
+export function RoomFurniture({ plan, onUse }: { plan: RoomPlan; onUse?: (thing: ThingKind) => void }) {
+  useEffect(() => () => void setCursor(''), [])
   return (
     <group>
-      {parts.map((part, i) => (
+      {plan.furniture.map((piece) => (
+        <FurniturePiece key={`${piece.kind}-${piece.col}-${piece.row}`} plan={plan} piece={piece} onUse={onUse} />
+      ))}
+    </group>
+  )
+}
+
+function FurniturePiece({ plan, piece, onUse }: { plan: RoomPlan; piece: Piece; onUse?: (thing: ThingKind) => void }) {
+  const parts = useMemo(() => furnitureParts(plan, piece), [plan, piece])
+  const fixed = parts.filter((p) => !isChairPart(p))
+  const chair = parts.filter(isChairPart)
+  const pot = parts.find((p) => p.name === 'pot')
+  const { F } = pieceFrame(plan, piece)
+  const chairGroup = useRef<Group>(null)
+
+  // The chair slides straight out from under the desk while the avatar sits down
+  useFrame(() => {
+    if (!chairGroup.current) return
+    const out = chairOut(thingNow.thing, thingNow.weight) * CHAIR_SLIDE
+    chairGroup.current.position.set(F[0] * out, 0, F[1] * out)
+  })
+
+  const tap = (event: ThreeEvent<MouseEvent>) => {
+    if (!isTap(event.delta)) return
+    event.stopPropagation() // the floor underneath must not also take this tap
+    onUse?.(THING_FOR[piece.kind])
+  }
+  const hover = (event: ThreeEvent<PointerEvent>) => {
+    event.stopPropagation()
+    setCursor('pointer')
+  }
+
+  return (
+    <group onClick={tap} onPointerOver={hover} onPointerOut={() => setCursor('')}>
+      {fixed.map((part, i) => (
         <PartMesh key={`${part.name}-${i}`} part={part} />
       ))}
+      {chair.length > 0 && (
+        <group ref={chairGroup}>
+          {chair.map((part, i) => (
+            <PartMesh key={`${part.name}-${i}`} part={part} />
+          ))}
+        </group>
+      )}
+      {pot && <PotSteam position={[pot.position[0], pot.position[1] + pot.size[1] / 2, pot.position[2]]} />}
     </group>
   )
 }
