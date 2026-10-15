@@ -406,7 +406,7 @@ then gets up again. A tap elsewhere makes it get up first and go, and only thing
 count as done, ready for the checklist. 203 tests pass, three planted bugs were caught, and the
 browser check fixed a cooking arm that waved instead of stirring.
 
-### Block 3: Today's adult things
+### Block 3: Today's adult things ✅
 - A small **Today** card lists the three adult things with a tick for each one done today, and a
   count ("2 of 3"). When all three are ticked it says so ("Adulting: done for today").
 - Ticks are **saved in the browser** for the day, survive a reload and clear at local midnight.
@@ -416,6 +416,54 @@ browser check fixed a cooking arm that waved instead of stirring.
 **Tests:** finishing a thing ticks it (cancelling doesn't); the count and the all-done message; a
 reload keeps today's ticks; a new day clears them; corrupt, old-version or future-dated saved data is
 ignored; the items match the furniture's things one to one.
+
+**As built:**
+- **Logic** (`src/today/today.ts`, pure): `localDay` makes "2026-10-15" from the *local* date
+  parts, so the day ends at the user's midnight, not UTC's (8 am in Manila). Saved as
+  `adulthingz.today` = `{ version: 1, day, done: [...] }`; `readSaved` only trusts exactly that
+  shape for exactly today, and drops unknown things. `tick` adds once, in checklist order.
+- **Store** (`createTodayStore(storage, now)`): storage and clock are handed in, so tests use fakes
+  and a browser that blocks storage still works (it just forgets on reload). `markDone` ticks and
+  saves; `refresh` starts a new empty day after midnight. Plain functions, safe to pass as callbacks.
+- **Card** (`src/today/TodayCard.tsx`): under the wordmark; ticks are grape-filled rings; the line
+  under it reads "2 of 3 done", then "Adulting: done for today" in grape; the line is a `status`
+  region, so screen readers hear it change. It checks for midnight every 30 s and when the tab
+  comes back into view. On phones it folds into one row (90 px tall) so it doesn't cover the room.
+- **One path for every request:** the "go and do this" request moved up from the 3D scene to `App`,
+  so floor taps, furniture taps and the card's buttons all go the same way. The avatar's `done`
+  goes to `todayStore.markDone`. "Cook" is now labelled "Cook a meal".
+
+**Tests** (`src/today/today.test.ts`, 8 runs)
+- V2B3-T1: cooking to the end ticks it; cancelling mid-way with a floor tap doesn't.
+- V2B3-T2: "0 of 3 done", "2 of 3 done", "Adulting: done for today"; ticks keep their order, never
+  repeat.
+- V2B3-T3: what's saved is exactly `{ version, day, done }`, and a reload later that day keeps it.
+- V2B3-T4: the day follows the local clock (pinned to Manila time inside the test, so it also bites
+  on a UTC machine like GitHub's CI); a reload the next morning, or the page left open past
+  midnight, starts empty.
+- V2B3-T5: broken JSON, null, numbers, arrays, older or newer versions, a future date, a wrong
+  shape: all ignored; unknown things dropped.
+- V2B3-T6: the checklist matches the furniture's things one to one, and every room has all three
+  pieces.
+- V2B3-T7: storage that throws (or none at all) never crashes, and ticks still show.
+- V2B3-T8: marking the same thing twice saves once and tells listeners once, even passed as a plain
+  callback.
+
+**Checked in the browser:** from a fresh browser the card said "0 of 3 done"; its Cook a meal button
+sent the avatar to cook and ticked it, saved; a reload kept it; the Sleep button pressed with the
+keyboard alone (focus, Enter) slept and ticked; tapping the desk paid the bills and the card said
+"Adulting: done for today"; on a phone the same saved day showed in one 90 px row; no console errors.
+
+Planted bugs caught: yesterday's ticks kept (V2B3-T4, T5), the day following UTC (V2B3-T4, thanks to
+the Manila pin), and blocked storage crashing the store (V2B3-T7).
+
+**Summary (done 2026-10-15):** A Today card ticks off sleep, cooking and paying the bills as the
+avatar finishes them, says "Adulting: done for today" when all three are done, and remembers the day
+until local midnight. Its buttons send the avatar to do each thing, so it all works from the keyboard
+too. 211 tests pass, and three planted bugs proved the day, the saved data and blocked storage are
+all guarded.
+
+**v2 complete:** a furnished room, things to do in it, and a daily checklist of adult things.
 
 ---
 

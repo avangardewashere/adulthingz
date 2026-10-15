@@ -11,9 +11,10 @@ camera-side walls cut low so you can look in), meet an anime avatar that breathe
 tap the floor to walk the avatar around: the shortest route that fits, curving around corners, with a walk
 made entirely in code.
 
-**v2 in progress (adult things):** every room has a bed, a desk and a kitchenette; tap one and the
+**v2 complete (adult things):** every room has a bed, a desk and a kitchenette; tap one and the
 avatar walks over to sleep (the room goes dark), cook (stirring a steaming pot) or pay the bills
-(sitting at the laptop). Next: a daily checklist of today's adult things.
+(sitting at the laptop). A Today card ticks each one off, says "Adulting: done for today" when all
+three are done, and remembers the day until midnight. Its buttons work from the keyboard too.
 
 The avatar is β Ver AvatarSample_1 by the VRoid Project (pixiv), CC0; see
 [public/avatars/LICENSE.md](public/avatars/LICENSE.md).

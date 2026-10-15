@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { CameraFit } from './CameraFit'
@@ -8,13 +8,25 @@ import { RoomShell } from '../room/RoomShell'
 import { parseRoom, roomSize } from '../room/roomLayout'
 import { findShape, type RoomShapeId } from '../room/roomShapes'
 import { Avatar, type AvatarRequest } from '../avatar/AvatarModel'
+import type { Request } from '../things/activity'
+import type { ThingKind } from '../things/things'
 
 // The 3D view. The canvas is transparent, so the page's backdrop shows behind it.
-export function RoomScene({ shapeId }: { shapeId: RoomShapeId }) {
+// Taps in the room (floor, furniture) go up to the app as requests; the app hands the latest
+// one back down to the avatar, so the Today card's buttons can send requests the same way.
+export function RoomScene({
+  shapeId,
+  request,
+  onRequest,
+  onDone,
+}: {
+  shapeId: RoomShapeId
+  request: AvatarRequest | null
+  onRequest: (request: Request) => void
+  onDone: (thing: ThingKind) => void
+}) {
   const plan = useMemo(() => parseRoom(findShape(shapeId).rows), [shapeId])
   const { width, depth } = roomSize(plan)
-  // the latest tap (a floor tile, or a piece of furniture); the avatar works out the rest
-  const [request, setRequest] = useState<AvatarRequest | null>(null)
 
   return (
     <Canvas
@@ -33,10 +45,10 @@ export function RoomScene({ shapeId }: { shapeId: RoomShapeId }) {
       <RoomShell
         key={shapeId}
         plan={plan}
-        onFloorTap={(tile) => setRequest({ type: 'walk', tile, id: performance.now() })}
-        onUse={(thing) => setRequest({ type: 'use', thing, id: performance.now() })}
+        onFloorTap={(tile) => onRequest({ type: 'walk', tile })}
+        onUse={(thing) => onRequest({ type: 'use', thing })}
       />
-      <Avatar plan={plan} request={request} />
+      <Avatar plan={plan} request={request} onDone={onDone} />
       <OrbitControls
         makeDefault
         target={[TARGET.x, TARGET.y, TARGET.z]}

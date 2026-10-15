@@ -9,7 +9,7 @@ export const FURNITURE_FOR: Record<ThingKind, FurnitureKind> = { sleep: 'bed', c
 // Seconds: easing into the pose, doing it, easing back out. About 4 s of actually doing it.
 export const THINGS: Record<ThingKind, { label: string; enter: number; hold: number; exit: number }> = {
   sleep: { label: 'Sleep', enter: 1.2, hold: 4, exit: 1.2 }, // lying down takes a moment
-  cook: { label: 'Cook', enter: 0.5, hold: 4, exit: 0.5 },
+  cook: { label: 'Cook a meal', enter: 0.5, hold: 4, exit: 0.5 },
   bills: { label: 'Pay the bills', enter: 1, hold: 4, exit: 1 }, // the chair slides out as the avatar sits
 }
 

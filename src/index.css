@@ -99,6 +99,115 @@ body,
   }
 }
 
+/* Today card: under the wordmark. The header lets clicks through to the room; the card doesn't. */
+.today {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 12px 8px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  box-shadow:
+    0 1px 2px color-mix(in srgb, var(--ink) 10%, transparent),
+    0 6px 20px color-mix(in srgb, var(--ink) 10%, transparent);
+  pointer-events: auto;
+}
+
+.today-title {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.today-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.today-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 4px 10px 4px 4px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.today-item:hover {
+  background: var(--lilac);
+}
+
+.today-item:focus-visible {
+  outline: 2px solid var(--grape);
+  outline-offset: 1px;
+}
+
+/* the tick: an empty ring, filled grape once it's done today */
+.today-tick {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--grape);
+  border-radius: 50%;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--paper);
+}
+
+.today-item[data-done='true'] .today-tick {
+  background: var(--grape);
+}
+
+.today-summary {
+  margin: 4px 4px 0;
+  font-size: 0.8rem;
+}
+
+.today-summary[data-all-done='true'] {
+  font-weight: 700;
+  color: var(--grape);
+}
+
+/* Phones: one compact row, so the card doesn't cover the room */
+@media (max-width: 480px) {
+  .today {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 6px 8px;
+  }
+  .today-title {
+    margin: 0;
+  }
+  .today-list {
+    flex-direction: row;
+  }
+  .today-item {
+    width: auto;
+    padding-right: 8px;
+  }
+  .today-summary {
+    flex-basis: 100%;
+    margin: 0 4px;
+  }
+}
+
 /* Hidden on screen, still read out by screen readers */
 .sr-only {
   position: absolute;
